@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, HTTPException, File
 from fastapi.responses import FileResponse
 from PyPDF2 import PdfMerger, PdfReader, PdfWriter
 from typing import List
+import os
 
 
 app = FastAPI()
@@ -29,23 +30,12 @@ async def comprimir_pdf(file: UploadFile = File(...)):
     if file.filename.split(".")[-1] != "pdf":
         raise HTTPException(
             status_code=400, detail="Tipo de archivo invalido, solo se permiten archivos PDF.")
-    reader = PdfReader(file.file)
-    writer = PdfWriter()
-    for page in reader.pages:
-        page.compress_content_streams()
-        writer.add_page(page)
 
-    output_pdf = "pdf_comprimido.pdf"
-    with open(output_pdf, "wb") as f:
-        writer.write(f)
+    name = file.filename.split(".")[0]
+    with open(f"temp_{name}.pdf", "wb") as buffer:
+        buffer.write(file.file.read())
 
-    reader = PdfReader(output_pdf)
-    writer = PdfWriter()
-    for page in reader.pages:
-        writer.add_page(page)
+    os.system(
+        f"gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile={name}_comprimido.pdf temp_{name}.pdf")
 
-    writer.add_metadata(reader.metadata)
-
-    with open(output_pdf, "wb") as fp:
-        writer.write(fp)
-    return FileResponse(output_pdf, media_type="application/pdf", filename=output_pdf)
+    return FileResponse(f"{name}_comprimido.pdf", media_type="application/pdf", filename=f"{name}_comprimido.pdf")

@@ -1,14 +1,15 @@
-from fastapi import FastAPI, UploadFile, HTTPException, File
+from fastapi import FastAPI, UploadFile, HTTPException, File, Form
 from fastapi.responses import FileResponse
 from PyPDF2 import PdfMerger, PdfReader, PdfWriter
 from typing import List
 import os
+import subprocess
 from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 origins = [
-    "http://localhost:3000",  # Permitir solicitudes desde este origen
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -19,6 +20,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+MAX_FILE_SIZE = 40 * 1024 * 1024
+
+
+def is_valid_pdf(file_path: str) -> bool:
+    try:
+        reader = PdfReader(file_path)
+        return True
+    except:
+        return False
+
+
+def scan_file_for_malware(file_path: str) -> bool:
+
+    result = subprocess.run(['clamscan', file_path], stdout=subprocess.PIPE)
+    return "OK" in result.stdout.decode()
+
 
 @app.post("/unir_pdfs/")
 async def unir_pdfs(files: List[UploadFile] = File(...)):
@@ -28,7 +45,28 @@ async def unir_pdfs(files: List[UploadFile] = File(...)):
         if file.filename.split(".")[-1] != "pdf":
             raise HTTPException(
                 status_code=400, detail="Tipo de archivo invalido, solo se permiten archivos PDF.")
-        merger.append(file.file)
+
+        temp_file_path = f"/tmp/{file.filename}"
+        with open(temp_file_path, "wb") as buffer:
+            buffer.write(file.file.read())
+
+        if os.path.getsize(temp_file_path) > MAX_FILE_SIZE:
+            os.remove(temp_file_path)
+            raise HTTPException(
+                status_code=400, detail="El archivo es demasiado grande.")
+
+        if not is_valid_pdf(temp_file_path):
+            os.remove(temp_file_path)
+            raise HTTPException(
+                status_code=400, detail="El archivo PDF no es válido.")
+
+        if not scan_file_for_malware(temp_file_path):
+            os.remove(temp_file_path)
+            raise HTTPException(
+                status_code=400, detail="El archivo contiene malware.")
+
+        merger.append(temp_file_path)
+        os.remove(temp_file_path)
 
     output_pdf = "pdf_unido.pdf"
     merger.write(output_pdf)
@@ -44,27 +82,59 @@ async def comprimir_pdf(file: UploadFile = File(...)):
             status_code=400, detail="Tipo de archivo invalido, solo se permiten archivos PDF.")
 
     name = file.filename.split(".")[0]
-    with open(f"temp_{name}.pdf", "wb") as buffer:
+    temp_file_path = f"/tmp/compress.pdf"
+    with open(temp_file_path, "wb") as buffer:
         buffer.write(file.file.read())
+    if os.path.getsize(temp_file_path) > MAX_FILE_SIZE:
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo es demasiado grande.")
+
+    if not is_valid_pdf(temp_file_path):
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo PDF no es válido.")
+
+    if not scan_file_for_malware(temp_file_path):
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo contiene malware.")
 
     os.system(
-        f"gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile={name}_comprimido.pdf temp_{name}.pdf")
+        f"gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -sOutputFile=/tmp/pdf_comprimido.pdf {temp_file_path}")
 
-    return FileResponse(f"{name}_comprimido.pdf", media_type="application/pdf", filename=f"{name}_comprimido.pdf")
+    return FileResponse(f"/tmp/pdf_comprimido.pdf", media_type="application/pdf", filename=f"{name}_comprimido.pdf")
 
 
 @app.post("/dividir_pdf/")
-async def dividir_pdf(file: UploadFile = File(...), start: int = 0, end: int = 0):
+async def dividir_pdf(file: UploadFile = File(...), start: int = Form(...),  end: int = Form(...)):
     if file.filename.split(".")[-1] != "pdf":
         raise HTTPException(
             status_code=400, detail="Tipo de archivo invalido, solo se permiten archivos PDF.")
+    temp_file_path = f"/tmp/split.pdf"
+    with open(temp_file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+    if os.path.getsize(temp_file_path) > MAX_FILE_SIZE:
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo es demasiado grande.")
+
+    if not is_valid_pdf(temp_file_path):
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo PDF no es válido.")
+
+    if not scan_file_for_malware(temp_file_path):
+        os.remove(temp_file_path)
+        raise HTTPException(
+            status_code=400, detail="El archivo contiene malware.")
 
     reader = PdfReader(file.file)
     writer = PdfWriter()
     for i in range(start-1, end):
         writer.add_page(reader.pages[i])
 
-    with open("pdf_dividido.pdf", "wb") as buffer:
+    with open(temp_file_path, "wb") as buffer:
         writer.write(buffer)
 
-    return FileResponse("pdf_dividido.pdf", media_type="application/pdf", filename="pdf_dividido.pdf")
+    return FileResponse(temp_file_path, media_type="application/pdf", filename="pdf_dividido.pdf")

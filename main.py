@@ -40,8 +40,10 @@ def scan_file_for_malware(file_path: str) -> bool:
 @app.post("/unir_pdfs/")
 async def unir_pdfs(files: List[UploadFile] = File(...)):
     merger = PdfMerger()
+    temp_files = []
 
     for file in files:
+        print(file.filename)
         if file.filename.split(".")[-1] != "pdf":
             raise HTTPException(
                 status_code=400, detail="Tipo de archivo invalido, solo se permiten archivos PDF.")
@@ -65,14 +67,18 @@ async def unir_pdfs(files: List[UploadFile] = File(...)):
             raise HTTPException(
                 status_code=400, detail="El archivo contiene malware.")
 
+        temp_files.append(temp_file_path)
+
+    for temp_file_path in temp_files:
+        print(temp_file_path)
         merger.append(temp_file_path)
         os.remove(temp_file_path)
 
-    output_pdf = "pdf_unido.pdf"
-    merger.write(output_pdf)
+    output_path = "/tmp/unido.pdf"
+    merger.write(output_path)
     merger.close()
 
-    return FileResponse(output_pdf, media_type="application/pdf", filename=output_pdf)
+    return FileResponse(output_path, media_type="application/pdf", filename="unido.pdf")
 
 
 @app.post("/comprimir_pdf/")

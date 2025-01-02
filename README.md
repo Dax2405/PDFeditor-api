@@ -8,6 +8,10 @@ This FastAPI application provides an API for handling PDF files with three main 
 
 **Note**: For security reasons, the API currently uses ClamScan to scan for malware, which may result in longer processing times. Alternatively, you can use the VirusTotal API or its Python client. However, due to my commitment to open-source principles and privacy concerns, I have chosen not to use these alternatives.
 
+## Web
+
+This project also has a [frontend application](https://github.com/Dax2405/PDFeditor-web) that you can use. Additionally, the web is hosted on a [personal server](https://pdf-editor.dax-ec.ru/). Please use it responsibly and adhere to security guidelines.
+
 ## Table of Contents
 
 - [Requirements](#requirements)

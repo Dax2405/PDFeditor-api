@@ -20,6 +20,7 @@ To use this API, ensure you have the following installed:
 
 - **Python** 3.8+
 - **Ghostscript** for PDF compression
+- **Clamscan** for the malware analysis
 - **FastAPI** for creating the API
 - **PyPDF2** for PDF manipulation
 - **`curl`** to make HTTP requests from the command line
@@ -28,41 +29,42 @@ To use this API, ensure you have the following installed:
 
 1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/Dax2405/PDFeditor-api.git
-   cd PDFeditor-api
+  ```bash
+  git clone https://github.com/Dax2405/PDFeditor-api.git
+  cd PDFeditor-api
+  ```
 
 2. **Create and activate a virtual environment:**
 
-    ```bash
-    python3 -m venv env
-    source env/bin/activate # For Linux 
-    ```
+   ```bash
+   python3 -m venv env
+   source env/bin/activate # For Linux 
+   ```
 
 3. **Install the required Python packages:**
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 4. **Run the FastAPI application:**
 
-    ```bash
-    fastapi dev main.py
-    ```
+   ```bash
+   uvicorn main:app --reload
+   ```
 
 5. **Install Ghostscript (if not already installed):**
 
-    ```bash
-    # On Debian/Ubuntu
-    sudo apt install ghostscript
+   ```bash
+   # On Debian/Ubuntu
+   sudo apt install ghostscript
 
-    # On Fedora
-    sudo dnf install ghostscript
-    
-    #On Arch 
-    sudo pacman -S ghostscript
-    ```
+   # On Fedora
+   sudo dnf install ghostscript
+   
+   # On Arch 
+   sudo pacman -S ghostscript
+   ```
 
 ## Available Endpoints
 
@@ -119,6 +121,10 @@ To split a PDF from page `start` to `end`:
 ```bash
 curl -X POST "http://localhost:8000/dividir_pdf/" -F "file=@file_to_split.pdf" -F "start=1" -F "end=3" -o split_output.pdf
 ```
+
+## Using the API on Personal Hosting
+
+You can also use the API on my personal hosting at `https://pdf-api.dax-ec.ru/`. Please note that it may take a longer time to process requests due to malware scanning. If you run the API locally, you can disable the malware scanner to speed up the process.
 
 ## License
 

@@ -52,7 +52,7 @@ To use this API, ensure you have the following installed:
 4. **Run the FastAPI application:**
 
    ```bash
-   uvicorn main:app --reload
+   fastapi dev main.py
    ```
 
 5. **Install Ghostscript (if not already installed):**

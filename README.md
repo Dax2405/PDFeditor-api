@@ -5,6 +5,7 @@ This FastAPI application provides an API for handling PDF files with three main 
 1. Merging multiple PDF files into one.
 2. Compressing a PDF file.
 3. Splitting a PDF file based on specified page ranges.
+
 **Note**: For security reasons, the API currently uses ClamScan to scan for malware, which may result in longer processing times. Alternatively, you can use the VirusTotal API or its Python client. However, due to my commitment to open-source principles and privacy concerns, I have chosen not to use these alternatives.
 
 ## Table of Contents

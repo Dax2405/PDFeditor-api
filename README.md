@@ -10,7 +10,7 @@ This FastAPI application provides an API for handling PDF files with three main 
 
 ## Web
 
-This project also has a [frontend application](https://github.com/Dax2405/PDFeditor-web) that you can use. Additionally, the web is hosted on a [personal server](https://pdf-editor.dax-ec.ru/). Please use it responsibly and adhere to security guidelines.
+This project also has a [frontend application](https://github.com/Dax2405/PDFeditor-web) that you can use. Additionally, the web is hosted on a [personal server](https://pdf-editor.dax-ec.ru/). Please use it responsibly and adhere to security guidelines. Currently it is having some troubles with large pds
 
 ## Table of Contents
 
